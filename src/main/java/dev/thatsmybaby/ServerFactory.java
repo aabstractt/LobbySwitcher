@@ -1,11 +1,10 @@
 package dev.thatsmybaby;
 
-import dev.thatsmybaby.utils.ServerStatus;
 import dev.thatsmybaby.utils.Priorities;
+import dev.thatsmybaby.utils.ServerStatus;
 import lombok.Getter;
-import net.md_5.bungee.api.ChatColor;
 import net.md_5.bungee.api.ProxyServer;
-import net.md_5.bungee.api.chat.ComponentBuilder;
+import net.md_5.bungee.api.chat.TextComponent;
 import net.md_5.bungee.api.config.ServerInfo;
 import net.md_5.bungee.api.connection.ProxiedPlayer;
 import net.md_5.bungee.api.connection.Server;
@@ -67,7 +66,7 @@ public class ServerFactory {
         Server server = player.getServer();
 
         if (server == null) {
-            player.sendMessage(new ComponentBuilder("Server not found").color(ChatColor.RED).create());
+            player.sendMessage(new TextComponent(LobbySwitcher.getInstance().translateString("SERVERS_NOT_FOUND")));
 
             return;
         }
@@ -75,7 +74,7 @@ public class ServerFactory {
         Map<String, Object> map = this.serversMap.values().stream().filter(storage -> ((List<String>) storage.get("servers")).contains(server.getInfo().getName())).findFirst().orElse(new HashMap<>());
 
         if (map.isEmpty()) {
-            player.sendMessage(new ComponentBuilder("Servers available not found").color(ChatColor.RED).create());
+            player.sendMessage(new TextComponent(LobbySwitcher.getInstance().translateString("SERVERS_NOT_FOUND")));
 
             return;
         }
@@ -83,7 +82,7 @@ public class ServerFactory {
         List<String> fallbacks = (List<String>) map.get("fallbacks");
 
         if (fallbacks.isEmpty()) {
-            player.sendMessage(new ComponentBuilder("Servers available not found").color(ChatColor.RED).create());
+            player.sendMessage(new TextComponent(LobbySwitcher.getInstance().translateString("SERVERS_NOT_FOUND")));
 
             return;
         }
@@ -93,7 +92,7 @@ public class ServerFactory {
 
     protected void sendToFallback(ProxiedPlayer player, List<String> fallbacks, String priority) {
         if (fallbacks.isEmpty()) {
-            player.sendMessage(new ComponentBuilder("Servers available not found").color(ChatColor.RED).create());
+            player.sendMessage(new TextComponent(LobbySwitcher.getInstance().translateString("SERVERS_NOT_FOUND")));
 
             return;
         }
@@ -115,7 +114,7 @@ public class ServerFactory {
         ServerStatus serverStatus = Priorities.getServerAvailable(list.stream().filter(ServerStatus::isOnline).collect(Collectors.toList()), priority);
 
         if (serverStatus == null) {
-            player.sendMessage(new ComponentBuilder("Servers available not found").color(ChatColor.RED).create());
+            player.sendMessage(new TextComponent(LobbySwitcher.getInstance().translateString("SERVERS_NOT_FOUND")));
 
             return;
         }
@@ -124,7 +123,7 @@ public class ServerFactory {
 
         player.connect(serverInfo);
 
-        player.sendMessage(new ComponentBuilder("Connecting to " + serverInfo.getName()).color(ChatColor.GREEN).create());
+        player.sendMessage(new TextComponent(LobbySwitcher.getInstance().translateString("CONNECTING_TO", "<server>", serverInfo.getName())));
     }
 
     private void update(ServerInfo serverInfo) {
