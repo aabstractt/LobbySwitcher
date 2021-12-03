@@ -1,0 +1,12 @@
+SW:
+  servers:
+    - sw01
+    - Lobby
+  fallbacks:
+    - Lobby
+Lobby:
+  servers:
+    - Lobby
+  fallbacks:
+    - sw01
+  priority: FILLER
