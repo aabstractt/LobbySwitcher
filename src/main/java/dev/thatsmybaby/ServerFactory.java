@@ -3,6 +3,7 @@ package dev.thatsmybaby;
 import dev.thatsmybaby.utils.Priorities;
 import dev.thatsmybaby.utils.ServerStatus;
 import lombok.Getter;
+import net.md_5.bungee.api.ChatColor;
 import net.md_5.bungee.api.ProxyServer;
 import net.md_5.bungee.api.chat.TextComponent;
 import net.md_5.bungee.api.config.ServerInfo;
@@ -28,7 +29,6 @@ public class ServerFactory {
     private final static ServerFactory instance = new ServerFactory();
 
     private final Map<String, Map<String, Object>> serversMap = new HashMap<>();
-    @Getter
     private final List<String> servers = new ArrayList<>();
 
     private final Map<String, ServerStatus> serverStatusMap = new ConcurrentHashMap<>();
@@ -44,7 +44,7 @@ public class ServerFactory {
             Map<String, Object> sections = new HashMap<>();
 
             for (String s : section.getKeys()) {
-                sections.put(s, section.getStringList(s));
+                sections.put(s, section.get(s));
             }
 
             this.servers.addAll(section.getStringList("fallbacks"));
@@ -55,7 +55,7 @@ public class ServerFactory {
         ProxyServer.getInstance().getLogger().info("Starting the ping task, the interval is 5 seconds");
 
         ProxyServer.getInstance().getScheduler().schedule(LobbySwitcher.getInstance(), () -> {
-            for (String s : ServerFactory.getInstance().getServers()) {
+            for (String s : this.servers) {
                 update(ProxyServer.getInstance().getServerInfo(s));
             }
         }, 0L, 10000, TimeUnit.MILLISECONDS);
@@ -71,7 +71,9 @@ public class ServerFactory {
             return;
         }
 
-        Map<String, Object> map = this.serversMap.values().stream().filter(storage -> ((List<String>) storage.get("servers")).contains(server.getInfo().getName())).findFirst().orElse(new HashMap<>());
+        Map<String, Object> map = this.serversMap.values().stream()
+                .filter(storage -> ((List<String>) storage.get("servers")).contains(server.getInfo().getName()))
+                .findFirst().orElse(new HashMap<>());
 
         if (map.isEmpty()) {
             player.sendMessage(new TextComponent(LobbySwitcher.getInstance().translateString("SERVERS_NOT_FOUND")));
@@ -87,10 +89,16 @@ public class ServerFactory {
             return;
         }
 
-        sendToFallback(player, fallbacks, (String) map.getOrDefault("priority", "NORMAL"));
+        Object priority = map.get("priority");
+
+        if (!(priority instanceof String)) {
+            priority = "NORMAL";
+        }
+
+        sendToFallback(player, fallbacks, (String) priority, map.getOrDefault("sender-message", null).toString());
     }
 
-    protected void sendToFallback(ProxiedPlayer player, List<String> fallbacks, String priority) {
+    protected void sendToFallback(ProxiedPlayer player, List<String> fallbacks, String priority, String message) {
         if (fallbacks.isEmpty()) {
             player.sendMessage(new TextComponent(LobbySwitcher.getInstance().translateString("SERVERS_NOT_FOUND")));
 
@@ -100,6 +108,10 @@ public class ServerFactory {
         List<ServerStatus> list = new ArrayList<>();
 
         for (String s : fallbacks) {
+            if (s.equalsIgnoreCase(player.getServer().getInfo().getName())) {
+                continue;
+            }
+
             ServerStatus serverStatus = this.serverStatusMap.get(s);
 
             if (serverStatus == null) {
@@ -111,7 +123,11 @@ public class ServerFactory {
             list.add(serverStatus);
         }
 
-        ServerStatus serverStatus = Priorities.getServerAvailable(list.stream().filter(ServerStatus::isOnline).collect(Collectors.toList()), priority);
+        ServerStatus serverStatus = Priorities.getServerAvailable(list.stream()
+                .filter(ServerStatus::isOnline)
+                //.filter(server -> !player.getServer().getInfo().getName().equalsIgnoreCase(server.getServerName()))
+                .collect(Collectors.toList()), priority
+        );
 
         if (serverStatus == null) {
             player.sendMessage(new TextComponent(LobbySwitcher.getInstance().translateString("SERVERS_NOT_FOUND")));
@@ -123,7 +139,9 @@ public class ServerFactory {
 
         player.connect(serverInfo);
 
-        player.sendMessage(new TextComponent(LobbySwitcher.getInstance().translateString("CONNECTING_TO", "<server>", serverInfo.getName())));
+        if (message != null) {
+            player.sendMessage(new TextComponent(ChatColor.translateAlternateColorCodes('&', message)));
+        }
     }
 
     private void update(ServerInfo serverInfo) {

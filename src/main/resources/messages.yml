@@ -1,2 +1,5 @@
 CONNECTING_TO: "&aConnecting to <server>"
 SERVERS_NOT_FOUND: "&cServers available not found"
+
+SENDALL_COMMAND: "Sending <players_count> players from server <server> to a fallback server"
+SENDING_PLAYER_TO_FALLBACK: "Sending <player> to a fallback server"

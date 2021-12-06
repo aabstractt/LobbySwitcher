@@ -71,7 +71,7 @@ public class LobbySwitcher extends Plugin {
             File file = new File(this.getDataFolder(), fileName + ".yml");
 
             if (file.exists()) {
-                return;
+                continue;
             }
 
             try {

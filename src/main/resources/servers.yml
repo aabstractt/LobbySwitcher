@@ -10,3 +10,4 @@ Lobby:
   fallbacks:
     - sw01
   priority: FILLER
+  sender-message: "&7Now traveling too: &a&lLOBBY"
